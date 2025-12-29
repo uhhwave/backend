@@ -1,5 +1,6 @@
 import { getRegistry, initializeAllMetrics } from '../../utils/metrics';
 import { scopedLogger } from '../../utils/logger';
+import { requireMetricsAccess } from './auth';
 
 const log = scopedLogger('metrics-monthly-endpoint');
 
@@ -15,11 +16,11 @@ async function ensureMetricsInitialized() {
 }
 
 export default defineEventHandler(async event => {
+  requireMetricsAccess(event);
+
   try {
     await ensureMetricsInitialized();
-    // Get the monthly registry
     const monthlyRegistry = getRegistry('monthly');
-
     const metrics = await monthlyRegistry.metrics();
     event.node.res.setHeader('Content-Type', monthlyRegistry.contentType);
     return metrics;
@@ -33,4 +34,4 @@ export default defineEventHandler(async event => {
       message: error instanceof Error ? error.message : 'Failed to collect monthly metrics',
     });
   }
-}); 
+});

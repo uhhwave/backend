@@ -34,6 +34,7 @@ services:
       CAPTCHA: ${CAPTCHA}
       CAPTCHA_CLIENT_KEY: ${CAPTCHA_CLIENT_KEY}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-*}
+      METRICS_SECRET: ${METRICS_SECRET:-}
       NODE_ENV: ${NODE_ENV:-production}
     env_file:
       - .env
