@@ -32,7 +32,7 @@ services:
       - '5432:5432'
 
   p-stream:
-    image: ghcr.io/p-stream/backend:latest
+    image: ghcr.io/uhhwave/backend:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${PG_USER:-pstream_user}:${PG_PASSWORD:-password}@postgres:5432/${PG_DB:-pstream_backend}?schema=public
