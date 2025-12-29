@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -6,39 +6,29 @@ COPY package*.json ./
 
 RUN npm install
 
-# Install curl for healthchecks (required by Coolify)
-RUN apk add --no-cache curl
-
-ARG DATABASE_URL
-ARG DATABASE_URL_DOCKER
-ARG META_NAME
-ARG META_DESCRIPTION
-ARG CRYPTO_SECRET
-ARG TMDB_API_KEY
-ARG CAPTCHA=false
-ARG CAPTCHA_CLIENT_KEY
-ARG TRAKT_CLIENT_ID
-ARG TRAKT_SECRET_ID
-ARG NODE_ENV=production
-
-ENV DATABASE_URL=${DATABASE_URL}
-ENV DATABASE_URL_DOCKER=${DATABASE_URL_DOCKER}
-ENV META_NAME=${META_NAME}
-ENV META_DESCRIPTION=${META_DESCRIPTION}
-ENV CRYPTO_SECRET=${CRYPTO_SECRET}
-ENV TMDB_API_KEY=${TMDB_API_KEY}
-ENV CAPTCHA=${CAPTCHA}
-ENV CAPTCHA_CLIENT_KEY=${CAPTCHA_CLIENT_KEY}
-ENV TRAKT_CLIENT_ID=${TRAKT_CLIENT_ID}
-ENV TRAKT_SECRET_ID=${TRAKT_SECRET_ID}
-ENV NODE_ENV=${NODE_ENV}
-
 COPY . .
 
 # Prisma generate needs DATABASE_URL at build time (doesn't connect, just needs provider info)
 RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" npx prisma generate
 
 RUN npm run build
+
+# ============================================
+# Production stage - minimal runtime image
+# ============================================
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Install curl for healthchecks (required by Coolify)
+RUN apk add --no-cache curl
+
+# Copy built output and runtime dependencies from builder
+COPY --from=builder /app/.output .output
+COPY --from=builder /app/generated generated
+COPY --from=builder /app/prisma prisma
+COPY --from=builder /app/prisma.config.ts prisma.config.ts
+COPY --from=builder /app/node_modules node_modules
 
 EXPOSE 3000
 
