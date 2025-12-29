@@ -94,11 +94,33 @@ export default defineEventHandler(async event => {
           where: { user_id: userId },
         });
 
+        // Delete list items first (foreign key to lists)
+        await tx.list_items.deleteMany({
+          where: { list: { user_id: userId } },
+        });
+
+        // Delete user lists
+        await tx.lists.deleteMany({
+          where: { user_id: userId },
+        });
+
+        // Delete watch history
+        await tx.watch_history.deleteMany({
+          where: { user_id: userId },
+        });
+
+        // Delete user group order
+        await tx.user_group_order
+          .delete({
+            where: { user_id: userId },
+          })
+          .catch(() => { });
+
         await tx.user_settings
           .delete({
             where: { id: userId },
           })
-          .catch(() => {});
+          .catch(() => { });
 
         await tx.sessions.deleteMany({
           where: { user: userId },

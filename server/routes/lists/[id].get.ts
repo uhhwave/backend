@@ -12,7 +12,7 @@ export default defineEventHandler(async event => {
   });
 
   if (!listInfo.public) {
-    return createError({
+    throw createError({
       statusCode: 403,
       message: 'List is not public',
     });

@@ -1,14 +1,21 @@
 import Trakt from 'trakt.tv';
-const traktKeys = useRuntimeConfig().trakt;
 
 let trakt: Trakt | null = null;
 
-if (traktKeys?.clientId && traktKeys?.clientSecret) {
-  const options = {
-    client_id: traktKeys.clientId,
-    client_secret: traktKeys.clientSecret,
-  };
-  trakt = new Trakt(options);
+export function getTrakt(): Trakt | null {
+  if (trakt) return trakt;
+
+  const clientId = process.env.TRAKT_CLIENT_ID;
+  const clientSecret = process.env.TRAKT_SECRET_ID;
+
+  if (clientId && clientSecret) {
+    trakt = new Trakt({
+      client_id: clientId,
+      client_secret: clientSecret,
+    });
+  }
+
+  return trakt;
 }
 
 export default trakt;

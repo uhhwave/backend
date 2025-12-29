@@ -1,20 +1,39 @@
 import { TMDB } from 'tmdb-ts';
-const tmdb = new TMDB(useRuntimeConfig().tmdbApiKey);
-import { trakt } from '#imports';
+import { getTrakt } from '~/utils/trakt';
+
+let tmdbInstance: TMDB | null = null;
+function getTmdb(): TMDB {
+  if (!tmdbInstance) {
+    const apiKey = process.env.TMDB_API_KEY;
+    if (!apiKey) throw new Error('TMDB_API_KEY not configured');
+    tmdbInstance = new TMDB(apiKey);
+  }
+  return tmdbInstance;
+}
 
 export default defineCachedEventHandler(
   async event => {
+    const tmdb = getTmdb();
+    const trakt = getTrakt();
+
+    if (!trakt) {
+      throw createError({
+        statusCode: 503,
+        message: 'Trakt API not configured',
+      });
+    }
+
     const popular = { movies: [], shows: [] };
     popular.movies.push(
       ...(data => (data.results.sort((a, b) => b.vote_average - a.vote_average), data.results))(
         await tmdb.movies.popular()
       )
-    ); // Sorts by vote average
+    );
     popular.shows.push(
       ...(data => (data.results.sort((a, b) => b.vote_average - a.vote_average), data.results))(
         await tmdb.tvShows.popular()
       )
-    ); // Sorts by vote average
+    );
 
     const genres = {
       movies: await tmdb.genres.movies(),
@@ -121,6 +140,6 @@ export default defineCachedEventHandler(
     };
   },
   {
-    maxAge: process.env.NODE_ENV === 'production' ? 60 * 60 : 0, // 20 Minutes for prod, no cache for dev. Customize to your liking
+    maxAge: process.env.NODE_ENV === 'production' ? 60 * 60 : 0,
   }
 );
