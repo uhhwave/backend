@@ -33,6 +33,7 @@ services:
       TRAKT_SECRET_ID: ${TRAKT_SECRET_ID:?Trakt secret ID required}
       CAPTCHA: ${CAPTCHA}
       CAPTCHA_CLIENT_KEY: ${CAPTCHA_CLIENT_KEY}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-*}
       NODE_ENV: ${NODE_ENV:-production}
     env_file:
       - .env
