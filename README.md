@@ -3,6 +3,61 @@ follow me on [GitHub](https://github.com/FifthWit)
 
 BackendV2 is a from scratch rewrite of movie-web's backend using [Nitro](https://nitro.build), and [Prisma](https://prisma.io). 
 
+---
+
+## what's new from this fork? 
+PS: These changes were made with AI (Claude), incase you're weary of AI, you can use just the original repo, and I don't really plan on updating this fork
+
+### Working Docker Compose Setup :)
+This was the main reason why I created this fork and published it, use these commands to get it running
+```sh
+git clone https://github.com/uhhwave/backend.git
+cd backend
+cp .env.example .env   # Edit .env with your values (DATABASE_URL, CRYPTO_SECRET, TRAKT keys, META_NAME, META_DESCRIPTION, everything really)
+docker compose up -d
+```
+Backend runs on port `3001`. Postgres is included.
+
+### CORS Configuration
+All origins are allowed by default. To restrict to specific domains, add to your `.env`:
+```env
+CORS_ALLOWED_ORIGIN='https://yourdomain.com'
+```
+For multiple domains:
+```env
+CORS_ALLOWED_ORIGIN='https://a.com,https://b.com'
+```
+
+### Metrics Protection
+The `/metrics` endpoint exposes Prometheus metrics, so to protect it from scrapers and random people, add to your `.env`:
+```env
+METRICS_SECRET=your_secret_token
+```
+Then access metrics at: `/metrics?token=your_secret_token`
+
+Without `METRICS_SECRET`, the endpoint stays open, no token required.
+
+For Prometheus scraping, add to your `prometheus.yml`:
+```yaml
+scrape_configs:
+  - job_name: 'pstream'
+    static_configs:
+      - targets: ['p-stream:3000']
+    params:
+      token: ['your_secret_token']
+```
+(If you don't use a metrics secret, you can just remove the `params` line)
+
+### Grafana Dashboard
+I didn't see any Grafana dashboards for this project so I made one, the pre-built Grafana dashboard is included at `grafana-dashboard.json`. 
+Import it into Grafana to see:
+- Request rates and latency percentiles
+- Provider status and hostname stats
+- Top watched media
+- User counts by namespace
+- Captcha success rates
+---
+---
 ## Deployment
 There are multiple supported ways to deploy BackendV2 based on your needs:
 ### NixPacks
