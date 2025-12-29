@@ -1,10 +1,11 @@
-const meta = useRuntimeConfig().public.meta;
+import { version } from '../utils/config';
+
 export default defineEventHandler(event => {
   return {
-    name: meta.name,
-    description: meta.description,
-    version: meta.version,
-    hasCaptcha: meta.captcha === 'true',
-    captchaClientKey: meta.captchaClientKey,
+    name: process.env.META_NAME || '',
+    description: process.env.META_DESCRIPTION || '',
+    version: version || '',
+    hasCaptcha: process.env.CAPTCHA === 'true',
+    captchaClientKey: process.env.CAPTCHA_CLIENT_KEY || '',
   };
 });
