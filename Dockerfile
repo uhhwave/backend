@@ -35,7 +35,8 @@ ENV NODE_ENV=${NODE_ENV}
 
 COPY . .
 
-RUN npx prisma generate
+# Prisma generate needs DATABASE_URL at build time (doesn't connect, just needs provider info)
+RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" npx prisma generate
 
 RUN npm run build
 
