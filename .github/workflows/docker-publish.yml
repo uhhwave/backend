@@ -16,6 +16,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -38,7 +53,7 @@ jobs:
         run: |
           docker run -d \
             --name test-container \
-            -p 3000:3000 \
+            --network host \
             -e DATABASE_URL="postgresql://user:pass@localhost:5432/db" \
             -e CRYPTO_SECRET="test-secret" \
             -e TMDB_API_KEY="test-key" \
@@ -47,7 +62,7 @@ jobs:
             test-image:latest
           
           echo "Waiting for container to start..."
-          sleep 10
+          sleep 15
           
           echo "Checking container logs..."
           docker logs test-container
