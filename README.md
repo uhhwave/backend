@@ -8,15 +8,68 @@ BackendV2 is a from scratch rewrite of movie-web's backend using [Nitro](https:/
 ## what's new from this fork? 
 PS: These changes were made with AI (Claude), incase you're weary of AI, you can use just the original repo, and I don't really plan on updating this fork
 
-### Working Docker Compose Setup :)
-This was the main reason why I created this fork and published it, use these commands to get it running
+### Docker Compose (Recommended)
+The easiest way to get up and running is using our pre-built image.
+
+1. Create a `docker-compose.yml` file:
+```yaml
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U $$PG_USER -d $$PG_DB' ]
+      interval: 5s
+      retries: 10
+      timeout: 2s
+    environment:
+      - POSTGRES_USER=${PG_USER:-pstream_user}
+      - POSTGRES_PASSWORD=${PG_PASSWORD:-password}
+      - POSTGRES_DB=${PG_DB:-pstream_backend}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  p-stream:
+    image: ghcr.io/p-stream/backend:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${PG_USER:-pstream_user}:${PG_PASSWORD:-password}@postgres:5432/${PG_DB:-pstream_backend}?schema=public
+      CRYPTO_SECRET: ${CRYPTO_SECRET:?required}
+      TMDB_API_KEY: ${TMDB_API_KEY:?required}
+      TRAKT_CLIENT_ID: ${TRAKT_CLIENT_ID:?required}
+      TRAKT_SECRET_ID: ${TRAKT_SECRET_ID:?required}
+      # Optional
+      META_NAME: ${META_NAME:-}
+      META_DESCRIPTION: ${META_DESCRIPTION:-}
+      CAPTCHA: ${CAPTCHA:-false}
+      CAPTCHA_CLIENT_KEY: ${CAPTCHA_CLIENT_KEY:-}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-*}
+      METRICS_SECRET: ${METRICS_SECRET:-}
+    ports:
+      - '3001:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+```
+
+2. Create a `.env` file with your secrets:
+```env
+CRYPTO_SECRET=...
+TMDB_API_KEY=...
+TRAKT_CLIENT_ID=...
+TRAKT_SECRET_ID=...
+```
+
+3. Run it:
 ```sh
-git clone https://github.com/uhhwave/backend.git
-cd backend
-cp .env.example .env   # Edit .env with your values (DATABASE_URL, CRYPTO_SECRET, TRAKT keys, META_NAME, META_DESCRIPTION, everything really)
 docker compose up -d
 ```
-Backend runs on port `3001`. Postgres is included.
+
 
 ### CORS Configuration
 All origins are allowed by default. To restrict to specific domains, add to your `.env`:
