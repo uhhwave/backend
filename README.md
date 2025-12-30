@@ -27,9 +27,11 @@ services:
       - POSTGRES_PASSWORD=${PG_PASSWORD:-password}
       - POSTGRES_DB=${PG_DB:-pstream_backend}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+    networks:
+      - p-stream-network
 
   p-stream:
     image: ghcr.io/uhhwave/backend:latest
@@ -52,9 +54,13 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - p-stream-network
 
-volumes:
-  postgres-data:
+networks:
+  p-stream-network:
+    driver: bridge
+
 ```
 
 2. Create a `.env` file with your secrets:
